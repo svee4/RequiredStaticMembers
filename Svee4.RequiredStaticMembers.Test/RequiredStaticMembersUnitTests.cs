@@ -11,7 +11,7 @@ namespace Svee4.RequiredStaticMembers.Test;
 [TestClass]
 public class RequiredStaticMembersUnitTest
 {
-    private const string AbstractAttributeCompleteFullName = $"{Utilities.BaseNamespace}.{AbstractAttributeGenerator.AttributeClassname}";
+    private const string AbstractAttributeCompleteFullName = $"{Utilities.BaseNamespace}.{AbstractAttributeGenerator.AttributeName}";
 
     [TestMethod]
     public async Task RSMAnalyzer_DoesNotRaiseError_Basic()

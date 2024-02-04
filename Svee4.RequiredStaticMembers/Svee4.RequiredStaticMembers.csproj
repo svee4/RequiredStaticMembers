@@ -15,7 +15,7 @@
 		
 		<Authors>Sandra Vepsä</Authors>
 		<Description>
-			This library lets you enforce classes to implement static members from interfaces.
+			Enforce types to implement static interface members.
 			
 			Problem: An interface with a `static abstract` member cannot be used as a generic.
 			Solution: Replace the `abstract` modifier with `virtual`.
@@ -46,6 +46,13 @@
 		</PackageReference>
 	</ItemGroup>
 
+
+	  <!-- This ensures the library will be packaged as a source generator when we use `dotnet pack` -->
+  	<ItemGroup>
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" 
+			PackagePath="analyzers/dotnet/cs" Visible="false" />
+	</ItemGroup>
+	
 	<ItemGroup>
 		<None Include="../readme.md" Pack="true" PackagePath="/" />
 	</ItemGroup>

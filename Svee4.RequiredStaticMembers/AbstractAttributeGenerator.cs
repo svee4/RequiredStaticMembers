@@ -7,9 +7,8 @@ namespace Svee4.RequiredStaticMembers;
 public class AbstractAttributeGenerator : IIncrementalGenerator
 {
 
-    public const string AttributeName = "AbstractAttribute";
+    public const string AttributeName = "Abstract";
     public const string AttributeClassname = $"{AttributeName}Attribute";
-
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -25,7 +24,7 @@ public class AbstractAttributeGenerator : IIncrementalGenerator
                     /// Apply this attribute to an interface member to track its implementation status in derived types.<br/>
                     /// <see href='https://github.com/svee4/RequiredStaticMembers'>Github</see>
                     /// </summary>
-                    [AttributeUsage(AttributeTargets.Method)]
+                    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
                     public sealed class {{AttributeClassname}} : Attribute {}
                 }
                 """);
