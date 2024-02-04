@@ -28,9 +28,9 @@ jobs:
       run: dotnet build -c Release --no-restore
 
     - name: Package 
-      run: dotnet pack -c Release --no-build --property:PackageOutputPath=../../nupkgs
+      run: dotnet pack -c Release --no-build --property:PackageOutputPath=./acpkg
     - name: Push to Nuget
-      run: dotnet nuget push "./nupkgs/*.nupkg" --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_PUBLISH_KEY }}
+      run: dotnet nuget push "./acpkg/*.nupkg" --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_PUBLISH_KEY }}
 
     - name: Create Release
       uses: ncipollo/release-action@v1
