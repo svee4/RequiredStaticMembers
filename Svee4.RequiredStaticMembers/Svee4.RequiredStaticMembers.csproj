@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<IsPackable>false</IsPackable>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		<AnalysisLevel>latest-all</AnalysisLevel>
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Label="Nuget">
+		<PackageId>Svee4.RequiredStaticMembers</PackageId>
+		
+		<Authors>Sandra Vepsä</Authors>
+		<Description>
+			This library lets you enforce classes to implement static members from interfaces.
+			
+			Problem: An interface with a `static abstract` member cannot be used as a generic.
+			Solution: Replace the `abstract` modifier with `virtual`.
+			Problem: Deriving classes are no longer required to implement the member. The interface must provide an implementation,
+			likely one that throws an exception at runtime.
+			Solution: Use `[AbstractAttribute]` to enforce all deriving classes to implement the static member, 
+			making accidental calls to the default implementation impossible.
+		</Description>
+		
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReadmeFile>readme.md</PackageReadmeFile>
+		
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<RepositoryUrl>https://github.com/svee4/RequiredStaticMembers</RepositoryUrl>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="'$(Configuration)' != 'Debug'">
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
+		<PackageReference Include="MinVer" Version="4.3.0">
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		  <PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+	</ItemGroup>
+
+</Project>
