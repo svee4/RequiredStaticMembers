@@ -1,7 +1,7 @@
 # RequiredStaticMembers
 
-[![NuGet](https://img.shields.io/nuget/v/Immediate.Handlers.svg?style=plastic)](https://www.nuget.org/packages/Svee4.RequiredStaticMembers/)
-[![GitHub license](https://img.shields.io/github/license/viceroypenguin/Immediate.Handlers.svg)](https://github.com/svee4/RequiredStaticMembers/blob/main/license.txt)
+[![NuGet](https://img.shields.io/nuget/v/Svee4.RequiredStaticMembers.svg?style=plastic)](https://www.nuget.org/packages/Svee4.RequiredStaticMembers/)
+[![GitHub license](https://img.shields.io/github/license/svee4/RequiredStaticMembers.svg)](https://github.com/svee4/RequiredStaticMembers/blob/main/license.txt)
 
 ## What is the library good for?
 
@@ -15,8 +15,7 @@ using Svee4.RequiredStaticMembers;
 interface INode
 {
 	[Abstract]
-	public static virtual string Color =>
-		throw new InvalidOperationException("This will never be called on accident");
+	public static virtual string Color => throw new InvalidOperationException("This will never be called on accident");
 }
 
 class GreenNode : INode
@@ -43,4 +42,4 @@ You're welcome to open an issue or discussion
 
 ## Acknowledgments
 
--   The repo of [Immediate.Handlers](https://github.com/viceroypenguin/Immediate.Handlers/blob/master/src/Immediate.Handlers/Immediate.Handlers.csproj) was helpful in setting up csproj and CI/CD
+-   The repo of [Immediate.Handlers](https://github.com/viceroypenguin/Immediate.Handlers) was helpful in setting up csproj and CI/CD
