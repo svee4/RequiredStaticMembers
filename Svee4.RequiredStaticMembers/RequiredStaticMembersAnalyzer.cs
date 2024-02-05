@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -37,9 +38,9 @@ public class RequiredStaticMembersAnalyzer : DiagnosticAnalyzer
         description: null
     );
 
-
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
+    
 #pragma warning disable CA1062 // Validate arguments of public methods
     public override void Initialize(AnalysisContext context)
     {
@@ -49,45 +50,55 @@ public class RequiredStaticMembersAnalyzer : DiagnosticAnalyzer
     }
 #pragma warning restore CA1062 // Validate arguments of public methods
 
+    
     private static void AnalyzeContainingType(SyntaxNodeAnalysisContext context)
     {
-        var symbol = (ITypeSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node);
-        if (symbol is null) return;
+        var typeSymbol = (ITypeSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node);
+        Debug.Assert(typeSymbol is not null, $"{nameof(typeSymbol)} is not null");
+        var comparer = SymbolEqualityComparer.Default;
 
-        // collect methods that should be implemented
-        Dictionary<string, ISymbol> abstractMembers = [];
-        foreach (ISymbol member in symbol.AllInterfaces.SelectMany(inter => inter.GetMembers()))
+        List<ISymbol> nonImplementedMembers = [];
+
+        foreach (INamedTypeSymbol inter in typeSymbol.AllInterfaces)
         {
-            if (member is IMethodSymbol or IPropertySymbol 
-                && member.IsStatic
-                && member.GetAttributes().Any(IsAbstractAttribute))
+            foreach (ISymbol member in inter.GetMembers())
             {
-                abstractMembers.Add(member.Name, member);
+                // do cheap checks first
+                if (member is not IMethodSymbol or IPropertySymbol) continue;
+                if (!member.GetAttributes().Any(IsAbstractAttribute)) continue;
+
+                var implementation = typeSymbol.FindImplementationForInterfaceMember(member);
+                if (implementation is null)
+                {
+                    nonImplementedMembers.Add(member);
+                    continue;
+                }
+
+                if (!comparer.Equals(typeSymbol, implementation.ContainingType))
+                {
+                    // method is implemented in the interface
+                    // AFAIK static members cannot be overridden so that's not a concern
+                    nonImplementedMembers.Add(member);
+                    continue;
+                }
             }
         }
-        
 
-        // remove methods that are implemented
-        foreach (ISymbol method in symbol.GetMembers().Where(member => member is IMethodSymbol))
-        {
-            // static members cannot be explicitly implemented. if the name matches, it must be an implementation
-            abstractMembers.Remove(method.Name);
-        }
 
-        // all methods that haven't been removed are not implemented
-        foreach (var method in abstractMembers.Values)
+        // TODO: maybe inline this into the first loop
+        foreach (var method in nonImplementedMembers)
         {
             var diagnostic = Diagnostic.Create(
                 descriptor: Rule, 
                 location: context.Node.GetLocation(), 
-                /* type */      symbol.Name, 
+                /* type */      typeSymbol.Name, 
                 /* member */    method.Name, 
                 /* interface */ method.ContainingSymbol.Name);
 
             context.ReportDiagnostic(diagnostic);
         }
-
     }
+
 
     private static bool IsAbstractAttribute(AttributeData attribute) =>
         attribute.AttributeClass!.Name 
