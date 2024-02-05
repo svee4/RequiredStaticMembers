@@ -14,7 +14,7 @@ public class RequiredStaticMembersTest
     private const string AbstractAttributeCompleteFullName = $"{Utilities.BaseNamespace}.{AbstractAttributeGenerator.AttributeName}";
 
     [TestMethod]
-    public async Task RSMAnalyzer_DoesNotRaiseError_Basic()
+    public async Task BasicUsage()
     {
         const string test = $$"""
 using System;
@@ -24,7 +24,7 @@ return;
 interface IBase
 {
     [{{AbstractAttributeCompleteFullName}}]
-    static void Test() => throw new NotImplementedException();
+    static virtual void Test() => throw new NotImplementedException();
 }
 
 class Concrete : IBase
@@ -39,7 +39,7 @@ class Concrete : IBase
     }
 
     [TestMethod]
-    public async Task RSMAnalyzer_DoesNotRaiseError_SecondInheritance()
+    public async Task BasicUsage_SecondInheritance()
     {
         const string test = $$"""
 using System;
@@ -49,7 +49,7 @@ return;
 interface IBase
 {
     [{{AbstractAttributeCompleteFullName}}]
-    static void Test() => throw new NotImplementedException();
+    static virtual void Test() => throw new NotImplementedException();
 }
 
 interface IDerived : IBase
@@ -68,7 +68,7 @@ class Concrete : IDerived
     }
 
     [TestMethod]
-    public async Task RSMAnalyzer_DoesNotRaiseError_FirstInheritance()
+    public async Task BasicUsage_FirstInheritance()
     {
         const string test = $$"""
 using System;
@@ -83,7 +83,7 @@ interface IBase
 interface IDerived : IBase
 {
     [{{AbstractAttributeCompleteFullName}}]
-    static void Test() => throw new NotImplementedException();
+    static virtual void Test() => throw new NotImplementedException();
 }
 
 class Concrete : IDerived
@@ -97,7 +97,7 @@ class Concrete : IDerived
     }
 
     [TestMethod]
-    public async Task RSMAnalyzer_RaisesError_Basic()
+    public async Task BasicError()
     {
         const string test = $$"""
 using System;
@@ -107,7 +107,7 @@ return;
 interface IBase
 {
     [{{AbstractAttributeCompleteFullName}}]
-    static void Test() => throw new NotImplementedException();
+    static virtual void Test() => throw new NotImplementedException();
 }
 
 class Concrete : IBase
@@ -125,7 +125,7 @@ class Concrete : IBase
     }
 
     [TestMethod]
-    public async Task RSMAnalyzer_RaisesError_SecondInheritance()
+    public async Task BasicError_SecondInheritance()
     {
         const string test = $$"""
 using System;
@@ -135,7 +135,7 @@ return;
 interface IBase
 {
     [{{AbstractAttributeCompleteFullName}}]
-    static void Test() => throw new NotImplementedException();
+    static virtual void Test() => throw new NotImplementedException();
 }
 
 interface IDerived : IBase {}
@@ -154,7 +154,7 @@ class Concrete : IDerived
     }
 
     [TestMethod]
-    public async Task RSMAnalyzer_RaisesError_FirstInheritance()
+    public async Task BasicError_FirstInheritance()
     {
         const string test = $$"""
 using System;
@@ -168,7 +168,7 @@ interface IBase
 interface IDerived : IBase
 {
     [{{AbstractAttributeCompleteFullName}}]
-    static void Test() => throw new NotImplementedException();
+    static virtual void Test() => throw new NotImplementedException();
 }
 
     class Concrete : IDerived
