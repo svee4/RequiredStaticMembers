@@ -9,7 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Svee4.RequiredStaticMembers.Test;
 
 [TestClass]
-public class RequiredStaticMembersUnitTest
+public class RequiredStaticMembersTest
 {
     private const string AbstractAttributeCompleteFullName = $"{Utilities.BaseNamespace}.{AbstractAttributeGenerator.AttributeName}";
 
