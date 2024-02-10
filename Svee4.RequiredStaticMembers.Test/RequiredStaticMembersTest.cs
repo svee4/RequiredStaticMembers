@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Microsoft;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -11,8 +10,6 @@ namespace Svee4.RequiredStaticMembers.Test;
 [TestClass]
 public class RequiredStaticMembersTest
 {
-    // TODO: remove this redundant property and just AbstractAttributeGenerator.AttributeClassCompleteName directly
-    private const string AbstractAttributeCompleteFullName = AbstractAttributeGenerator.AttributeClassCompleteName;
 
     [TestMethod]
     public async Task BasicUsage()
@@ -24,7 +21,7 @@ return;
 
 interface IBase
 {
-    [{{AbstractAttributeCompleteFullName}}]
+    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
     static virtual void Test() => throw new NotImplementedException();
 }
 
@@ -35,7 +32,7 @@ class Concrete : IBase
 """;
 
         var result = await GetDiagnosticsDefaultImpl(test);
-
+        
         Assert.AreEqual(result.Length, 0);
     }
 
@@ -49,7 +46,7 @@ return;
 
 interface IBase
 {
-    [{{AbstractAttributeCompleteFullName}}]
+    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
     static virtual void Test() => throw new NotImplementedException();
 }
 
@@ -65,6 +62,7 @@ class Concrete : IDerived
 """;
 
         var result = await GetDiagnosticsDefaultImpl(test);
+        
         Assert.AreEqual(result.Length, 0);
     }
 
@@ -83,7 +81,7 @@ interface IBase
 
 interface IDerived : IBase
 {
-    [{{AbstractAttributeCompleteFullName}}]
+    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
     static virtual void Test() => throw new NotImplementedException();
 }
 
@@ -94,6 +92,7 @@ class Concrete : IDerived
 """;
 
         var result = await GetDiagnosticsDefaultImpl(test);
+        
         Assert.AreEqual(result.Length, 0);
     }
 
@@ -107,7 +106,7 @@ return;
 
 interface IBase
 {
-    [{{AbstractAttributeCompleteFullName}}]
+    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
     static virtual void Test() => throw new NotImplementedException();
 }
 
@@ -119,10 +118,7 @@ class Concrete : IBase
 
         var result = await GetDiagnosticsDefaultImpl(test);
 
-        Assert.AreEqual(result.Length, 1);
-        Assert.AreEqual(result[0].Id, RequiredStaticMembersAnalyzer.DiagnosticId);
-        Assert.AreEqual(result[0].GetMessage(), RequiredStaticMembersAnalyzer.GetFormattedMessage("Concrete", "Test", "IBase"));
-
+        AssertDiagnosticIdsMatch(result, RequiredStaticMembersAnalyzer.DiagnosticId);
     }
 
     [TestMethod]
@@ -135,7 +131,7 @@ return;
 
 interface IBase
 {
-    [{{AbstractAttributeCompleteFullName}}]
+    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
     static virtual void Test() => throw new NotImplementedException();
 }
 
@@ -149,9 +145,7 @@ class Concrete : IDerived
 
         var result = await GetDiagnosticsDefaultImpl(test);
 
-        Assert.AreEqual(result.Length, 1);
-        Assert.AreEqual(result[0].Id, RequiredStaticMembersAnalyzer.DiagnosticId);
-        Assert.AreEqual(result[0].GetMessage(), RequiredStaticMembersAnalyzer.GetFormattedMessage("Concrete", "Test", "IBase"));
+        AssertDiagnosticIdsMatch(result, RequiredStaticMembersAnalyzer.DiagnosticId);
     }
 
     [TestMethod]
@@ -168,7 +162,7 @@ interface IBase
 
 interface IDerived : IBase
 {
-    [{{AbstractAttributeCompleteFullName}}]
+    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
     static virtual void Test() => throw new NotImplementedException();
 }
 
@@ -180,9 +174,7 @@ class Concrete : IDerived
 
         var result = await GetDiagnosticsDefaultImpl(test);
 
-        Assert.AreEqual(result.Length, 1);
-        Assert.AreEqual(result[0].Id, RequiredStaticMembersAnalyzer.DiagnosticId);
-        Assert.AreEqual(result[0].GetMessage(), RequiredStaticMembersAnalyzer.GetFormattedMessage("Concrete", "Test", "IDerived"));
+        AssertDiagnosticIdsMatch(result, RequiredStaticMembersAnalyzer.DiagnosticId);
     }
     
     [TestMethod]
@@ -195,9 +187,9 @@ return;
 
 interface IBase
 {
-    [{{AbstractAttributeCompleteFullName}}]
+    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
     static virtual void Test1(int a) => throw new NotImplementedException();
-    [{{AbstractAttributeCompleteFullName}}]
+    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
     static virtual void Test2(int a, int b) => throw new NotImplementedException();
 
 }
@@ -211,7 +203,7 @@ class Concrete : IBase
 
         var result = await GetDiagnosticsDefaultImpl(test);
 
-        Assert.AreEqual(result.Length, 2);
+        AssertDiagnosticIdsMatch(result, RequiredStaticMembersAnalyzer.DiagnosticId, RequiredStaticMembersAnalyzer.DiagnosticId);
     }
     
     
@@ -225,7 +217,7 @@ return;
 
 interface IBase
 {
-    [{{AbstractAttributeCompleteFullName}}]
+    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
     static virtual void Test(string a) => throw new NotImplementedException();
 }
 
@@ -237,7 +229,7 @@ class Concrete : IBase
 
         var result = await GetDiagnosticsDefaultImpl(test);
 
-        Assert.AreEqual(result.Length, 1);
+        AssertDiagnosticIdsMatch(result, RequiredStaticMembersAnalyzer.DiagnosticId);
     }
     
        [TestMethod]
@@ -250,7 +242,7 @@ return;
 
 interface IBase
 {
-    [{{AbstractAttributeCompleteFullName}}]
+    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
     static virtual string Test() => throw new NotImplementedException();
 }
 
@@ -260,9 +252,9 @@ class Concrete : IBase
 }
 """;
 
-        var result = await GetDiagnosticsDefaultImpl(test);
+        ImmutableArray<Diagnostic> result = await GetDiagnosticsDefaultImpl(test);
 
-        Assert.AreEqual(result.Length, 1);
+        AssertDiagnosticIdsMatch(result, RequiredStaticMembersAnalyzer.DiagnosticId);
     }
 
     /// <summary>
@@ -289,4 +281,18 @@ class Concrete : IBase
     }
 
 
+    /// <summary>
+    /// Asserts that the diagnostics' ids are equal to the provided ids. also checks length
+    /// </summary>
+    /// <param name="diagnostics"></param>
+    /// <param name="ids"></param>
+    private static void AssertDiagnosticIdsMatch(ImmutableArray<Diagnostic> diagnostics, params string[] ids)
+    {
+        Assert.AreEqual(diagnostics.Length, ids.Length, "Number of produced diagnostics was different from number of expected diagnostics");
+        for (int i = 0; i < ids.Length && i < diagnostics.Length; i++)
+        {
+            Assert.AreEqual(diagnostics[i].Id, ids[i]);
+        }
+    }
+    
 }
