@@ -11,7 +11,8 @@ namespace Svee4.RequiredStaticMembers.Test;
 [TestClass]
 public class RequiredStaticMembersTest
 {
-    private const string AbstractAttributeCompleteFullName = $"{Utilities.BaseNamespace}.{AbstractAttributeGenerator.AttributeName}";
+    // TODO: remove this redundant property and just AbstractAttributeGenerator.AttributeClassCompleteName directly
+    private const string AbstractAttributeCompleteFullName = AbstractAttributeGenerator.AttributeClassCompleteName;
 
     [TestMethod]
     public async Task BasicUsage()

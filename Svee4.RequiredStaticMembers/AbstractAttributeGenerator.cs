@@ -9,7 +9,8 @@ public class AbstractAttributeGenerator : IIncrementalGenerator
 
     public const string AttributeName = "Abstract";
     public const string AttributeClassname = $"{AttributeName}Attribute";
-
+    public const string AttributeClassCompleteName = $"{Utilities.BaseNamespace}.{AttributeName}";
+    
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         context.RegisterPostInitializationOutput(context2 =>

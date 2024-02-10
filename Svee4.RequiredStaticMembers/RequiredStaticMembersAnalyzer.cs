@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -55,10 +56,9 @@ public class RequiredStaticMembersAnalyzer : DiagnosticAnalyzer
     {
         var typeSymbol = (ITypeSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node);
         Debug.Assert(typeSymbol is not null, $"{nameof(typeSymbol)} is not null");
-        var comparer = SymbolEqualityComparer.Default;
-
-        List<ISymbol> nonImplementedMembers = [];
-
+        
+        var symbolEqualityComparer = SymbolEqualityComparer.Default;
+        
         foreach (INamedTypeSymbol inter in typeSymbol.AllInterfaces)
         {
             foreach (ISymbol member in inter.GetMembers())
@@ -68,40 +68,35 @@ public class RequiredStaticMembersAnalyzer : DiagnosticAnalyzer
                 if (!member.GetAttributes().Any(IsAbstractAttribute)) continue;
 
                 var implementation = typeSymbol.FindImplementationForInterfaceMember(member);
-                if (implementation is null)
-                {
-                    nonImplementedMembers.Add(member);
-                    continue;
-                }
+                
+                // if the type does not have an implementation, FindImplementationForInterfaceMember will return the interface's default implementation
+                Debug.Assert(implementation is not null);
 
-                if (!comparer.Equals(typeSymbol, implementation.ContainingType))
+                // so, we need to check that the implementation is not that of the interface's
+                if (!symbolEqualityComparer.Equals(typeSymbol, implementation.ContainingType))
                 {
-                    // method is implemented in the interface
-                    // AFAIK static members cannot be overridden so that's not a concern
-                    nonImplementedMembers.Add(member);
-                    continue;
+                    ReportDiagnostic(context, typeSymbol, member);
                 }
             }
         }
-
-
-        // TODO: maybe inline this into the first loop
-        foreach (var method in nonImplementedMembers)
-        {
-            var diagnostic = Diagnostic.Create(
-                descriptor: Rule, 
-                location: context.Node.GetLocation(), 
-                /* type */      typeSymbol.Name, 
-                /* member */    method.Name, 
-                /* interface */ method.ContainingSymbol.Name);
-
-            context.ReportDiagnostic(diagnostic);
-        }
     }
-
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void ReportDiagnostic(
+        SyntaxNodeAnalysisContext context,
+        ITypeSymbol typeSymbol,
+        ISymbol memberSymbol
+    ) =>
+        context.ReportDiagnostic(Diagnostic.Create(
+            descriptor: Rule,
+            location: context.Node.GetLocation(),
+            /* type */ typeSymbol.Name,
+            /* member */ memberSymbol.Name,
+            /* interface */ memberSymbol.ContainingSymbol.Name));
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool IsAbstractAttribute(AttributeData attribute) =>
-        attribute.AttributeClass!.Name 
+        attribute.AttributeClass?.Name 
             is AbstractAttributeGenerator.AttributeClassname 
             or $"{Utilities.BaseNamespace}.{AbstractAttributeGenerator.AttributeClassname}";
 }
