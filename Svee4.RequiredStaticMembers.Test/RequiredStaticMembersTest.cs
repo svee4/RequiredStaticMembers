@@ -171,7 +171,7 @@ interface IDerived : IBase
     static virtual void Test() => throw new NotImplementedException();
 }
 
-    class Concrete : IDerived
+class Concrete : IDerived
 {
 
 }
@@ -182,6 +182,86 @@ interface IDerived : IBase
         Assert.AreEqual(result.Length, 1);
         Assert.AreEqual(result[0].Id, RequiredStaticMembersAnalyzer.DiagnosticId);
         Assert.AreEqual(result[0].GetMessage(), RequiredStaticMembersAnalyzer.GetFormattedMessage("Concrete", "Test", "IDerived"));
+    }
+    
+    [TestMethod]
+    public async Task BasicError_ParameterCountMismatch()
+    {
+        const string test = $$"""
+using System;
+
+return;
+
+interface IBase
+{
+    [{{AbstractAttributeCompleteFullName}}]
+    static virtual void Test1(int a) => throw new NotImplementedException();
+    [{{AbstractAttributeCompleteFullName}}]
+    static virtual void Test2(int a, int b) => throw new NotImplementedException();
+
+}
+
+class Concrete : IBase
+{
+    public static void Test1(int a, int b) {}
+    public static void Test2(int a) {}
+}
+""";
+
+        var result = await GetDiagnosticsDefaultImpl(test);
+
+        Assert.AreEqual(result.Length, 2);
+    }
+    
+    
+    [TestMethod]
+    public async Task BasicError_ParameterTypeMismatch()
+    {
+        const string test = $$"""
+using System;
+
+return;
+
+interface IBase
+{
+    [{{AbstractAttributeCompleteFullName}}]
+    static virtual void Test(string a) => throw new NotImplementedException();
+}
+
+class Concrete : IBase
+{
+    public static void Test(int a) {}
+}
+""";
+
+        var result = await GetDiagnosticsDefaultImpl(test);
+
+        Assert.AreEqual(result.Length, 1);
+    }
+    
+       [TestMethod]
+    public async Task BasicError_ReturnTypeMismatch()
+    {
+        const string test = $$"""
+using System;
+
+return;
+
+interface IBase
+{
+    [{{AbstractAttributeCompleteFullName}}]
+    static virtual string Test() => throw new NotImplementedException();
+}
+
+class Concrete : IBase
+{
+    public static int Test() => 3;
+}
+""";
+
+        var result = await GetDiagnosticsDefaultImpl(test);
+
+        Assert.AreEqual(result.Length, 1);
     }
 
     /// <summary>
