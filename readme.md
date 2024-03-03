@@ -10,14 +10,14 @@ using Svee4.RequiredStaticMembers;
 
 interface INode
 {
-  [Abstract]
-  public static virtual string Color => throw new InvalidOperationException("This will never be called on accident");
+    [Abstract]
+    public static virtual string Color => throw new InvalidOperationException("This will never be called on accident");
 }
 
 class GreenNode : INode
 {
-  // No error - property is implemented as expected
-  public static string Color => "Green";
+    // No error - property is implemented as expected
+    public static string Color => "Green";
 }
 
 class BlueNode : INode
