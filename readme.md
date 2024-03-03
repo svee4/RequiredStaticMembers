@@ -22,7 +22,7 @@ class GreenNode : INode
 
 class BlueNode : INode
 {
-  // Error RequiredStaticMembers001: Type 'BlueNode' does not implement required static member 'GetColor' from interface 'INode'
+    // Error RequiredStaticMembers001: Type 'BlueNode' does not implement required static member 'GetColor' from interface 'INode'
 }
 ```
 
