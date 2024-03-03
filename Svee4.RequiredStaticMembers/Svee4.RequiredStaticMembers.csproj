@@ -17,14 +17,7 @@
 
         <Authors>Sandra Vepsä</Authors>
         <Description>
-            Enforce types to implement static interface members.
-
-            Problem: An interface with a `static abstract` member cannot be used as a generic.
-            Solution: Replace the `abstract` modifier with `virtual`.
-            Problem: Deriving classes are no longer required to implement the member. The interface must provide an implementation,
-            likely one that throws an exception at runtime.
-            Solution: Use `[AbstractAttribute]` to enforce all deriving classes to implement the static member,
-            making accidental calls to the default implementation impossible.
+            Enforce types to implement static virtual interface members.
         </Description>
 
         <PackageLicenseExpression>MIT</PackageLicenseExpression>

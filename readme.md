@@ -3,11 +3,7 @@
 [![NuGet](https://img.shields.io/nuget/v/Svee4.RequiredStaticMembers.svg?style=plastic)](https://www.nuget.org/packages/Svee4.RequiredStaticMembers/)
 [![GitHub license](https://img.shields.io/github/license/svee4/RequiredStaticMembers.svg)](https://github.com/svee4/RequiredStaticMembers/blob/main/license.txt)
 
-## What is the library good for?
-
-Enforcing types to implement static interface members.
-
-## Code example
+## Enforce types to implement static virtual interface members
 
 ```cs
 using Svee4.RequiredStaticMembers;
@@ -30,6 +26,15 @@ class BlueNode : INode
 }
 ```
 
+## Why?
+
+- Problem: An interface with a `static abstract` member cannot be used as a generic, such as `List<T>`.
+- Solution: Replace the `abstract` modifier with `virtual`.
+- Problem: Deriving classes are no longer required to implement the member. The interface must provide an implementation, likely one that throws an exception at
+  runtime.
+- Solution: Use `[AbstractAttribute]` to enforce all deriving classes to implement the static member, making accidental calls to the default implementation
+  impossible.
+
 ## How do i use it?
 
 1. Install the package from [Nuget](https://www.nuget.org/packages/Svee4.RequiredStaticMembers/)
@@ -38,8 +43,8 @@ class BlueNode : INode
 
 ## I have an issue or I want to participate in development
 
-You're welcome to open an issue or discussion
+Please open an issue or discussion
 
 ## Acknowledgments
 
--   The repo of [Immediate.Handlers](https://github.com/viceroypenguin/Immediate.Handlers) was helpful in setting up csproj and CI/CD
+- The repo of [Immediate.Handlers](https://github.com/viceroypenguin/Immediate.Handlers) was helpful in setting up csproj and CI/CD
