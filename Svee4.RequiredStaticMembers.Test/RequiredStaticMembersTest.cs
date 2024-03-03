@@ -21,7 +21,7 @@ return;
 
 interface IBase
 {
-    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
+    [{{SourceGenerator.AttributeClassCompleteName}}]
     static virtual void Test() => throw new NotImplementedException();
 }
 
@@ -46,7 +46,7 @@ return;
 
 interface IBase
 {
-    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
+    [{{SourceGenerator.AttributeClassCompleteName}}]
     static virtual void Test() => throw new NotImplementedException();
 }
 
@@ -81,7 +81,7 @@ interface IBase
 
 interface IDerived : IBase
 {
-    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
+    [{{SourceGenerator.AttributeClassCompleteName}}]
     static virtual void Test() => throw new NotImplementedException();
 }
 
@@ -106,7 +106,7 @@ return;
 
 interface IBase
 {
-    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
+    [{{SourceGenerator.AttributeClassCompleteName}}]
     static virtual void Test() => throw new NotImplementedException();
 }
 
@@ -131,7 +131,7 @@ return;
 
 interface IBase
 {
-    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
+    [{{SourceGenerator.AttributeClassCompleteName}}]
     static virtual void Test() => throw new NotImplementedException();
 }
 
@@ -162,7 +162,7 @@ interface IBase
 
 interface IDerived : IBase
 {
-    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
+    [{{SourceGenerator.AttributeClassCompleteName}}]
     static virtual void Test() => throw new NotImplementedException();
 }
 
@@ -187,9 +187,9 @@ return;
 
 interface IBase
 {
-    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
+    [{{SourceGenerator.AttributeClassCompleteName}}]
     static virtual void Test1(int a) => throw new NotImplementedException();
-    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
+    [{{SourceGenerator.AttributeClassCompleteName}}]
     static virtual void Test2(int a, int b) => throw new NotImplementedException();
 
 }
@@ -217,7 +217,7 @@ return;
 
 interface IBase
 {
-    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
+    [{{SourceGenerator.AttributeClassCompleteName}}]
     static virtual void Test(string a) => throw new NotImplementedException();
 }
 
@@ -232,7 +232,7 @@ class Concrete : IBase
         AssertDiagnosticIdsMatch(result, RequiredStaticMembersAnalyzer.DiagnosticId);
     }
     
-       [TestMethod]
+    [TestMethod]
     public async Task BasicError_ReturnTypeMismatch()
     {
         const string test = $$"""
@@ -242,7 +242,7 @@ return;
 
 interface IBase
 {
-    [{{AbstractAttributeGenerator.AttributeClassCompleteName}}]
+    [{{SourceGenerator.AttributeClassCompleteName}}]
     static virtual string Test() => throw new NotImplementedException();
 }
 
@@ -253,10 +253,109 @@ class Concrete : IBase
 """;
 
         ImmutableArray<Diagnostic> result = await GetDiagnosticsDefaultImpl(test);
-
         AssertDiagnosticIdsMatch(result, RequiredStaticMembersAnalyzer.DiagnosticId);
     }
+    
+    [TestMethod]
+    public async Task BasicUsage_OneGeneric()
+    {
+                const string test = $$"""
+using System;
 
+return;
+
+interface IBase<T>
+{
+    [{{SourceGenerator.AttributeClassCompleteName}}]
+    static virtual T Test() => throw new NotImplementedException();
+}
+
+class Concrete : IBase<int>
+{
+    public static int Test() => 3;
+}
+""";
+
+        ImmutableArray<Diagnostic> result = await GetDiagnosticsDefaultImpl(test);
+
+        Assert.AreEqual(result.Length, 0);
+    }
+
+        
+    [TestMethod]
+    public async Task BasicUsage_TwoGeneric()
+    {
+                const string test = $$"""
+using System;
+
+return;
+
+interface IBase<T>
+{
+    [{{SourceGenerator.AttributeClassCompleteName}}]
+    static virtual void Test(T _) => throw new NotImplementedException();
+}
+
+class Concrete : IBase<int>, IBase<string>
+{
+    public static void Test(int _) {}
+    public static void Test(string _) {}
+}
+""";
+
+        ImmutableArray<Diagnostic> result = await GetDiagnosticsDefaultImpl(test);
+        Assert.AreEqual(result.Length, 0);
+    }
+        
+    [TestMethod]
+    public async Task BasicError_WrongGeneric()
+    {
+                const string test = $$"""
+using System;
+
+return;
+
+interface IBase<T>
+{
+    [{{SourceGenerator.AttributeClassCompleteName}}]
+    static virtual T Test() => throw new NotImplementedException();
+}
+
+class Concrete : IBase<int>
+{
+    public static string Test() => "";
+}
+""";
+
+        ImmutableArray<Diagnostic> result = await GetDiagnosticsDefaultImpl(test);
+        AssertDiagnosticIdsMatch(result, RequiredStaticMembersAnalyzer.DiagnosticId);
+    }
+        
+    [TestMethod]
+    public async Task BasicError_MissingSecondGeneric()
+    {
+                const string test = $$"""
+using System;
+
+return;
+
+interface IBase<T>
+{
+    [{{SourceGenerator.AttributeClassCompleteName}}]
+    static virtual void Test(T _) => throw new NotImplementedException();
+}
+
+class Concrete : IBase<string>, IBase<int>
+{
+    public static void Test(string _) {}
+}
+""";
+
+        ImmutableArray<Diagnostic> result = await GetDiagnosticsDefaultImpl(test);
+        AssertDiagnosticIdsMatch(result, RequiredStaticMembersAnalyzer.DiagnosticId);
+    }
+    
+    
     /// <summary>
     /// Runs generator and analyzer on source code and returns generated diagnostics
     /// </summary>
@@ -272,7 +371,7 @@ class Concrete : IBase
             Basic.Reference.Assemblies.Net80.References.All
         );
 
-        CSharpGeneratorDriver.Create(new AbstractAttributeGenerator())
+        CSharpGeneratorDriver.Create(new SourceGenerator())
                         .RunGeneratorsAndUpdateCompilation(compilation, out var compilationResult, out _);
 
         var compilationResultWithAnalyzers = compilationResult.WithAnalyzers([new RequiredStaticMembersAnalyzer()]);

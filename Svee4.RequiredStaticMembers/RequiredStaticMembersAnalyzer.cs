@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Svee4.RequiredStaticMembers;
@@ -15,7 +16,7 @@ public class RequiredStaticMembersAnalyzer : DiagnosticAnalyzer
     
     public const string DiagnosticId = $"{Utilities.DiagnosticPrefix}001";
 
-    private const string MessageFormat = "Type '{0}' does not implement required static member '{1}' from interface '{2}'";
+    private const string MessageFormat = "Type '{0}' does not implement required static virtual member '{1}' from interface '{2}'";
 
     /// <summary>
     /// Formats a message from this analyzer with the given parameters
@@ -37,7 +38,7 @@ public class RequiredStaticMembersAnalyzer : DiagnosticAnalyzer
         description: null
     );
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(Rule);
 
     
 #pragma warning disable CA1062 // Validate arguments of public methods
@@ -45,23 +46,20 @@ public class RequiredStaticMembersAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        context.RegisterSyntaxNodeAction(AnalyzeContainingType, ImmutableArray.Create(SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration));
+        context.RegisterSyntaxNodeAction(AnalyzeType, ImmutableArray.Create(SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration));
     }
 #pragma warning restore CA1062 // Validate arguments of public methods
 
     
-    private static void AnalyzeContainingType(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeType(SyntaxNodeAnalysisContext context)
     {
         var typeSymbol = (ITypeSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node);
-        Debug.Assert(typeSymbol is not null, $"{nameof(typeSymbol)} is not null");
+        Debug.Assert(typeSymbol is not null);
         
-        var symbolEqualityComparer = SymbolEqualityComparer.Default;
-        
-        foreach (INamedTypeSymbol inter in typeSymbol.AllInterfaces)
+        foreach (INamedTypeSymbol @interface in typeSymbol.AllInterfaces)
         {
-            foreach (ISymbol member in inter.GetMembers())
+            foreach (ISymbol member in @interface.GetMembers())
             {
-                // do cheap checks first
                 if (member is not IMethodSymbol or IPropertySymbol) continue;
                 if (!member.GetAttributes().Any(IsAbstractAttribute)) continue;
 
@@ -71,30 +69,24 @@ public class RequiredStaticMembersAnalyzer : DiagnosticAnalyzer
                 Debug.Assert(implementation is not null);
 
                 // so, we need to check that the implementation is not that of the interface's
-                if (!symbolEqualityComparer.Equals(typeSymbol, implementation.ContainingType))
+                if (!SymbolEqualityComparer.Default.Equals(typeSymbol, implementation.ContainingType))
                 {
-                    ReportDiagnostic(context, typeSymbol, member);
+                    // location could be the interface node location but i dont know how to get that
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        descriptor: Rule,
+                        location: ((TypeDeclarationSyntax)context.Node).Identifier.GetLocation(),
+                        /* type      */ typeSymbol.Name,
+                        /* member    */ member.Name,
+                        /* interface */ member.ContainingSymbol.Name));
                 }
             }
         }
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ReportDiagnostic(
-        SyntaxNodeAnalysisContext context,
-        ITypeSymbol typeSymbol,
-        ISymbol memberSymbol
-    ) =>
-        context.ReportDiagnostic(Diagnostic.Create(
-            descriptor: Rule,
-            location: context.Node.GetLocation(),
-            /* type */ typeSymbol.Name,
-            /* member */ memberSymbol.Name,
-            /* interface */ memberSymbol.ContainingSymbol.Name));
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool IsAbstractAttribute(AttributeData attribute) =>
+        // i dont know if theres a better way
         attribute.AttributeClass?.Name 
-            is AbstractAttributeGenerator.AttributeClassname 
-            or $"{Utilities.BaseNamespace}.{AbstractAttributeGenerator.AttributeClassname}";
+            is SourceGenerator.AttributeClassname 
+            or $"{Utilities.BaseNamespace}.{SourceGenerator.AttributeClassname}";
 }
