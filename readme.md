@@ -10,8 +10,8 @@ using Svee4.RequiredStaticMembers;
 
 interface INode
 {
-    [Abstract]
-    public static virtual string Color => throw new InvalidOperationException("This will never be called on accident");
+    [Required]
+    public static virtual string Color => RequiredStaticMemberAccessException.Throw(nameof(Color));
 }
 
 class GreenNode : INode
@@ -22,7 +22,7 @@ class GreenNode : INode
 
 class BlueNode : INode
 {
-    // Error RequiredStaticMembers001: Type 'BlueNode' does not implement required static member 'GetColor' from interface 'INode'
+    // Error RSM001: Type 'BlueNode' does not implement required static member 'GetColor' from interface 'INode'
 }
 ```
 
@@ -32,13 +32,13 @@ class BlueNode : INode
 - Solution: Replace the `abstract` modifier with `virtual`.
 - Problem: Deriving classes are no longer required to implement the member. The interface must provide an implementation, likely one that throws an exception at
   runtime.
-- Solution: Use `[AbstractAttribute]` to enforce all deriving classes to implement the static member, making accidental calls to the default implementation
+- Solution: Use `[RequiredAttribute]` to enforce all deriving classes to implement the static member, making accidental calls to the default implementation
   impossible.
 
 ## How do i use it?
 
 1. Install the package from [Nuget](https://www.nuget.org/packages/Svee4.RequiredStaticMembers/)
-2. Give a static interface member the attribute `Svee4.RequiredStaticMembers.AbstractAttribute`
+2. Give a static interface member the attribute `Svee4.RequiredStaticMembers.RequiredAttribute`
 3. All done! A deriving type that does not implement the given member will cause an error
 
 ## I have an issue or I want to participate in development
