@@ -4,4 +4,5 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|--------------------
-RequiredStaticMembers001  | RequiredStaticMembers |  Error | Raises an error when a type does not implemented an interface member annotated with [Abstract]
+RSM001 | RequiredStaticMembers | Error | Raises an error when a Required member is not implemented
+RSM002 | RequiredStaticMembers | Error | Raises an error when the target of a Required attribute is not valid

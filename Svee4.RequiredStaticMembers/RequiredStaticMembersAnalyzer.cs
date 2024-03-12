@@ -16,7 +16,7 @@ public class RequiredStaticMembersAnalyzer : DiagnosticAnalyzer
     
     public const string DiagnosticId = $"{Utilities.DiagnosticPrefix}001";
 
-    private const string MessageFormat = "Type '{0}' does not implement required static virtual member '{1}' from interface '{2}'";
+    private const string MessageFormat = "Type '{0}' does not implement required static member '{1}' from interface '{2}'";
 
     /// <summary>
     /// Formats a message from this analyzer with the given parameters
@@ -46,13 +46,17 @@ public class RequiredStaticMembersAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
+        
         context.RegisterSyntaxNodeAction(AnalyzeType, ImmutableArray.Create(SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration));
     }
 #pragma warning restore CA1062 // Validate arguments of public methods
-
+    
     
     private static void AnalyzeType(SyntaxNodeAnalysisContext context)
     {
+        var token = context.CancellationToken;
+        token.ThrowIfCancellationRequested();
+
         var typeSymbol = (ITypeSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node);
         Debug.Assert(typeSymbol is not null);
         
@@ -61,8 +65,8 @@ public class RequiredStaticMembersAnalyzer : DiagnosticAnalyzer
             foreach (ISymbol member in @interface.GetMembers())
             {
                 if (member is not IMethodSymbol or IPropertySymbol) continue;
-                if (!member.GetAttributes().Any(IsAbstractAttribute)) continue;
-
+                if (!member.GetAttributes().Any(Utilities.IsRequiredAttribute)) continue;
+                
                 var implementation = typeSymbol.FindImplementationForInterfaceMember(member);
                 
                 // if the type does not have an implementation, FindImplementationForInterfaceMember will return the interface's default implementation
@@ -82,11 +86,4 @@ public class RequiredStaticMembersAnalyzer : DiagnosticAnalyzer
             }
         }
     }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool IsAbstractAttribute(AttributeData attribute) =>
-        // i dont know if theres a better way
-        attribute.AttributeClass?.Name 
-            is SourceGenerator.AttributeClassname 
-            or $"{Utilities.BaseNamespace}.{SourceGenerator.AttributeClassname}";
 }

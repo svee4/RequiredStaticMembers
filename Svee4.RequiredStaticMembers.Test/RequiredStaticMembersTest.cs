@@ -62,7 +62,6 @@ class Concrete : IDerived
 """;
 
         var result = await GetDiagnosticsDefaultImpl(test);
-        
         Assert.AreEqual(result.Length, 0);
     }
 
@@ -354,7 +353,62 @@ class Concrete : IBase<string>, IBase<int>
         ImmutableArray<Diagnostic> result = await GetDiagnosticsDefaultImpl(test);
         AssertDiagnosticIdsMatch(result, RequiredStaticMembersAnalyzer.DiagnosticId);
     }
+
+    [TestMethod]
+    public async Task AttributeTarget_ValidTarget()
+    {
+        const string test = $$"""
+using System;
+
+return;
+
+interface IBase<T>
+{
+    [{{SourceGenerator.AttributeClassCompleteName}}]
+    static virtual void Test() => throw new NotImplementedException();
+}
+""";
+
+        ImmutableArray<Diagnostic> result = await GetDiagnosticsDefaultImpl(test);
+        Assert.AreEqual(result.Length, 0);
+    }
     
+    [TestMethod]
+    public async Task AttributeTarget_InvalidTarget_1()
+    {
+        const string test = $$"""
+using System;
+
+return;
+
+interface IBase<T>
+{
+  [{{SourceGenerator.AttributeClassCompleteName}}]
+  static void Test() => throw new NotImplementedException();
+}
+""";
+
+        ImmutableArray<Diagnostic> result = await GetDiagnosticsDefaultImpl(test);
+        AssertDiagnosticIdsMatch(result, RequiredAttributeTargetAnalyzer.DiagnosticId);
+    }
+    
+    [TestMethod]
+    public async Task AttributeTarget_InvalidTarget_2()
+    {
+        const string test = $$"""
+
+return;
+
+interface IBase<T>
+{
+  [{{SourceGenerator.AttributeClassCompleteName}}]
+  void Test();
+}
+""";
+
+        ImmutableArray<Diagnostic> result = await GetDiagnosticsDefaultImpl(test);
+        AssertDiagnosticIdsMatch(result, RequiredAttributeTargetAnalyzer.DiagnosticId);
+    }
     
     /// <summary>
     /// Runs generator and analyzer on source code and returns generated diagnostics
@@ -374,7 +428,7 @@ class Concrete : IBase<string>, IBase<int>
         CSharpGeneratorDriver.Create(new SourceGenerator())
                         .RunGeneratorsAndUpdateCompilation(compilation, out var compilationResult, out _);
 
-        var compilationResultWithAnalyzers = compilationResult.WithAnalyzers([new RequiredStaticMembersAnalyzer()]);
+        var compilationResultWithAnalyzers = compilationResult.WithAnalyzers([new RequiredStaticMembersAnalyzer(), new RequiredAttributeTargetAnalyzer()]);
 
         return await compilationResultWithAnalyzers.GetAllDiagnosticsAsync();
     }

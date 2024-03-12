@@ -7,10 +7,10 @@ namespace Svee4.RequiredStaticMembers;
 public class SourceGenerator : IIncrementalGenerator
 {
 
-    public const string AttributeName = "Abstract";
+    public const string AttributeName = "Required";
     public const string AttributeClassname = $"{AttributeName}Attribute";
     public const string AttributeClassCompleteName = $"{Utilities.BaseNamespace}.{AttributeName}";
-    public const string ExceptionClassName = "AbstractMemberAccessException";
+    public const string ExceptionClassName = "RequiredStaticMemberAccessException";
     
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -30,14 +30,14 @@ public class SourceGenerator : IIncrementalGenerator
                     public sealed class {{AttributeClassname}} : Attribute {}
                     
                     /// <summary>
-                    /// This exception should be thrown from a virtual static member which should not have been called
+                    /// This exception should be thrown from a required static member which should not have been called
                     /// </summary>
                     public sealed class {{ExceptionClassName}}: Exception
                     {
                         public override string Message { get; }
                         
                         public {{ExceptionClassName}}(string memberName) => 
-                            Message = $"Attempt to access Abstract virtual static interface member '{memberName}'";
+                            Message = $"Attempted to access required static interface member '{memberName}' that does not have an implementation in the base type";
                         
                         /// <summary>
                         /// Throws a new <see cref="{{ExceptionClassName}}" />
@@ -52,7 +52,7 @@ public class SourceGenerator : IIncrementalGenerator
                         /// </summary>
                         /// <remarks>
                         /// This method automatically uses the name of the calling member as the memberName argument, 
-                        /// and thus should only be called directly from an Abstract interface member
+                        /// and thus should only be called directly from a Required interface member
                         /// </remarks>
                         [System.Diagnostics.CodeAnalysis.DoesNotReturn]
                         public static void ThrowWithCallerName(
