@@ -9,8 +9,9 @@ public class SourceGenerator : IIncrementalGenerator
 
     public const string AttributeName = "Required";
     public const string AttributeClassname = $"{AttributeName}Attribute";
-    public const string AttributeClassCompleteName = $"{Utilities.BaseNamespace}.{AttributeName}";
+    public const string AttributeClassCompleteName = $"{Utilities.BaseNamespace}.{AttributeClassname}";
     public const string ExceptionClassName = "RequiredStaticMemberAccessException";
+    public const string ExceptionClassCompleteName = $"{Utilities.BaseNamespace}.{ExceptionClassName}";
     
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -37,7 +38,7 @@ public class SourceGenerator : IIncrementalGenerator
                         public override string Message { get; }
                         
                         public {{ExceptionClassName}}(string memberName) => 
-                            Message = $"Attempted to access required static interface member '{memberName}' that does not have an implementation in the base type";
+                            Message = $"Attempted to access required static virtual interface member '{memberName}' that does not have an implementation in the base type";
                         
                         /// <summary>
                         /// Throws a new <see cref="{{ExceptionClassName}}" />
@@ -45,6 +46,14 @@ public class SourceGenerator : IIncrementalGenerator
                         /// <param name="memberName">Name of the member</param>
                         [System.Diagnostics.CodeAnalysis.DoesNotReturn]
                         public static void Throw(string memberName) => 
+                            throw new {{ExceptionClassName}}(memberName);
+                        
+                        /// <summary>
+                        /// Throws a new <see cref="{{ExceptionClassName}}" />
+                        /// </summary>
+                        /// <param name="memberName">Name of the member</param>
+                        [System.Diagnostics.CodeAnalysis.DoesNotReturn]
+                        public static T Throw<T>(string memberName) => 
                             throw new {{ExceptionClassName}}(memberName);
                         
                         /// <summary>
@@ -56,6 +65,18 @@ public class SourceGenerator : IIncrementalGenerator
                         /// </remarks>
                         [System.Diagnostics.CodeAnalysis.DoesNotReturn]
                         public static void ThrowWithCallerName(
+                            [System.Runtime.CompilerServices.CallerMemberName] string memberName = "") => 
+                            throw new {{ExceptionClassName}}(memberName);
+                            
+                        /// <summary>
+                        /// Throws a new <see cref="{{ExceptionClassName}}" /> with the calling member as the name of the member
+                        /// </summary>
+                        /// <remarks>
+                        /// This method automatically uses the name of the calling member as the memberName argument, 
+                        /// and thus should only be called directly from a Required interface member
+                        /// </remarks>
+                        [System.Diagnostics.CodeAnalysis.DoesNotReturn]
+                        public static T ThrowWithCallerName<T>(
                             [System.Runtime.CompilerServices.CallerMemberName] string memberName = "") => 
                             throw new {{ExceptionClassName}}(memberName);
                     }

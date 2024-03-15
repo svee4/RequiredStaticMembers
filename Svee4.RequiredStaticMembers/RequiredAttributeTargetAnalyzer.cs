@@ -15,7 +15,7 @@ public class RequiredAttributeTargetAnalyzer : DiagnosticAnalyzer
     public const string DiagnosticId = $"{Utilities.DiagnosticPrefix}002";
 
     private const string MessageFormat =
-        $"Member '{{0}}' is not a valid target for attribute '{SourceGenerator.AttributeClassname}'; Member must be a `virtual static` interface member";
+        $"Member '{{0}}' is not a valid target for attribute '{SourceGenerator.AttributeClassname}'; Member must be a `static virtual` interface member";
 
     private static readonly DiagnosticDescriptor Rule = new(
         id: DiagnosticId,

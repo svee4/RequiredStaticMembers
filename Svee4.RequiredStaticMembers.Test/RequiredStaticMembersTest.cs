@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -10,7 +11,11 @@ namespace Svee4.RequiredStaticMembers.Test;
 [TestClass]
 public class RequiredStaticMembersTest
 {
+    private const string ThrowWithCallerName = $"{SourceGenerator.ExceptionClassCompleteName}.ThrowWithCallerName()";
 
+    private static string ThrowWithCallerNameGeneric(string generic) =>
+        $"{SourceGenerator.ExceptionClassCompleteName}.ThrowWithCallerName<{generic}>()";
+    
     [TestMethod]
     public async Task BasicUsage()
     {
@@ -22,7 +27,7 @@ return;
 interface IBase
 {
     [{{SourceGenerator.AttributeClassCompleteName}}]
-    static virtual void Test() => throw new NotImplementedException();
+    static virtual void Test() => {{ThrowWithCallerName}};
 }
 
 class Concrete : IBase
@@ -47,7 +52,7 @@ return;
 interface IBase
 {
     [{{SourceGenerator.AttributeClassCompleteName}}]
-    static virtual void Test() => throw new NotImplementedException();
+    static virtual void Test() => {{ThrowWithCallerName}};
 }
 
 interface IDerived : IBase
@@ -81,7 +86,7 @@ interface IBase
 interface IDerived : IBase
 {
     [{{SourceGenerator.AttributeClassCompleteName}}]
-    static virtual void Test() => throw new NotImplementedException();
+    static virtual void Test() => {{ThrowWithCallerName}};
 }
 
 class Concrete : IDerived
@@ -106,7 +111,7 @@ return;
 interface IBase
 {
     [{{SourceGenerator.AttributeClassCompleteName}}]
-    static virtual void Test() => throw new NotImplementedException();
+    static virtual void Test() => {{ThrowWithCallerName}};
 }
 
 class Concrete : IBase
@@ -131,7 +136,7 @@ return;
 interface IBase
 {
     [{{SourceGenerator.AttributeClassCompleteName}}]
-    static virtual void Test() => throw new NotImplementedException();
+    static virtual void Test() => {{ThrowWithCallerName}};
 }
 
 interface IDerived : IBase {}
@@ -162,7 +167,7 @@ interface IBase
 interface IDerived : IBase
 {
     [{{SourceGenerator.AttributeClassCompleteName}}]
-    static virtual void Test() => throw new NotImplementedException();
+    static virtual void Test() => {{ThrowWithCallerName}};
 }
 
 class Concrete : IDerived
@@ -187,9 +192,9 @@ return;
 interface IBase
 {
     [{{SourceGenerator.AttributeClassCompleteName}}]
-    static virtual void Test1(int a) => throw new NotImplementedException();
+    static virtual void Test1(int a) => {{ThrowWithCallerName}};
     [{{SourceGenerator.AttributeClassCompleteName}}]
-    static virtual void Test2(int a, int b) => throw new NotImplementedException();
+    static virtual void Test2(int a, int b) => {{ThrowWithCallerName}};
 
 }
 
@@ -217,7 +222,7 @@ return;
 interface IBase
 {
     [{{SourceGenerator.AttributeClassCompleteName}}]
-    static virtual void Test(string a) => throw new NotImplementedException();
+    static virtual void Test(string a) => {{ThrowWithCallerName}};
 }
 
 class Concrete : IBase
@@ -234,7 +239,7 @@ class Concrete : IBase
     [TestMethod]
     public async Task BasicError_ReturnTypeMismatch()
     {
-        const string test = $$"""
+        string test = $$"""
 using System;
 
 return;
@@ -242,7 +247,7 @@ return;
 interface IBase
 {
     [{{SourceGenerator.AttributeClassCompleteName}}]
-    static virtual string Test() => throw new NotImplementedException();
+    static virtual string Test() => {{ThrowWithCallerNameGeneric("string")}};
 }
 
 class Concrete : IBase
@@ -258,7 +263,7 @@ class Concrete : IBase
     [TestMethod]
     public async Task BasicUsage_OneGeneric()
     {
-                const string test = $$"""
+                string test = $$"""
 using System;
 
 return;
@@ -266,7 +271,7 @@ return;
 interface IBase<T>
 {
     [{{SourceGenerator.AttributeClassCompleteName}}]
-    static virtual T Test() => throw new NotImplementedException();
+    static virtual T Test() => {{ThrowWithCallerNameGeneric("T")}};
 }
 
 class Concrete : IBase<int>
@@ -292,7 +297,7 @@ return;
 interface IBase<T>
 {
     [{{SourceGenerator.AttributeClassCompleteName}}]
-    static virtual void Test(T _) => throw new NotImplementedException();
+    static virtual void Test(T _) => {{ThrowWithCallerName}};
 }
 
 class Concrete : IBase<int>, IBase<string>
@@ -309,7 +314,7 @@ class Concrete : IBase<int>, IBase<string>
     [TestMethod]
     public async Task BasicError_WrongGeneric()
     {
-                const string test = $$"""
+                 string test = $$"""
 using System;
 
 return;
@@ -317,7 +322,7 @@ return;
 interface IBase<T>
 {
     [{{SourceGenerator.AttributeClassCompleteName}}]
-    static virtual T Test() => throw new NotImplementedException();
+    static virtual T Test() => {{ThrowWithCallerNameGeneric("T")}};
 }
 
 class Concrete : IBase<int>
@@ -341,7 +346,7 @@ return;
 interface IBase<T>
 {
     [{{SourceGenerator.AttributeClassCompleteName}}]
-    static virtual void Test(T _) => throw new NotImplementedException();
+    static virtual void Test(T _) => {{ThrowWithCallerName}};
 }
 
 class Concrete : IBase<string>, IBase<int>
@@ -365,7 +370,7 @@ return;
 interface IBase<T>
 {
     [{{SourceGenerator.AttributeClassCompleteName}}]
-    static virtual void Test() => throw new NotImplementedException();
+    static virtual void Test() => {{ThrowWithCallerName}};
 }
 """;
 
@@ -384,7 +389,7 @@ return;
 interface IBase<T>
 {
   [{{SourceGenerator.AttributeClassCompleteName}}]
-  static void Test() => throw new NotImplementedException();
+  static void Test() => {{ThrowWithCallerName}};
 }
 """;
 
@@ -422,9 +427,14 @@ interface IBase<T>
         var compilation = CSharpCompilation.Create(
             "Test",
             [syntaxTree],
-            Basic.Reference.Assemblies.Net80.References.All
+            Basic.Reference.Assemblies.Net80.References.All,
+            new CSharpCompilationOptions(
+                OutputKind.ConsoleApplication,
+                specificDiagnosticOptions: [
+                    KeyValuePair.Create("CS8019", ReportDiagnostic.Suppress), // Remove unnecessary using directives 
+                ])
         );
-
+        
         CSharpGeneratorDriver.Create(new SourceGenerator())
                         .RunGeneratorsAndUpdateCompilation(compilation, out var compilationResult, out _);
 
